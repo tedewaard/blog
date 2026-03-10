@@ -1,0 +1,272 @@
+---
+title: "VMware, Cloud-Init & Terraform"
+date: 2026-01-27T00:00:00Z
+tags: ["vmware", "cloud-init", "terraform", "iaac", "esxi"]
+excerpt: "Automating VM provisioning on VMware ESXi using Terraform and Cloud-Init to save time, ensure consistency, and add the benefits of version control."
+---
+= VMware, Cloud-Init & Terraform
+
+Most of my career has been spent at a company that hosts their infrastructure on prem. Like most companies, that means VMware ESXi for our hypervisor. I've always been interested in automation and really wanted a reason to use Terraform, despite not being a cloud shop. So, I set out to automate our VM provisioning in order to save time, make the process consistent and reliable, and add the benefits of version control.
+
+== The Old Process
+
+NOTE: This article will focus on our linux VMs, which happen to be Ubuntu server. But I also got it working for Windows Server as well.
+
+The old process consisted of creating a new base VM from an ISO. Then, installing any base applications and configurations that can live in the template image. These would be apps that don't care about or bind themselves to any unique identifiers.
+
+Examples include:
+
+* Crowdstrike EDR
+* DUO for MFA during server authentication
+* Configs - Firewall, SNMP, Users, SSH keys
+
+Then, we would add a bash script that does additional configuration after cloning the template and logging into the server. This script involved user interaction like specifying the hostname, network config, joining the domain, and installing software that does need to attach to unique identifiers (like enrolling the VM in our RMM).
+
+=== Concerns with this setup
+
+There are a few key issues with how we were doing things. First, too much configuration in the template itself. I mean, not the biggest deal and I could probably take a look at using packer to build our templates. But I'd rather keep the template as lean as possible and handle the customization with cloud-init and ansible. Second, the bash script used for additional configuration is just not it. Any changes to the script would need to be updated in the template, but more importantly, the script requires user interaction and manually entering information, which was just begging for fat finger errors. Additionally, it meant I couldn't spin up multiple VMs and configure them at the same time. I'd have to go one by one, which takes time when you're trying to spin up a 10 node Kubernetes cluster.
+
+The solution is a combination of 3 tools - terraform, cloud-init and ansible. Configurations for all three can live in version control, giving us the ability to iterate and rollback if needed. It also makes everything repeatable, consistent and clearly documents what's happening (this has been handy for compliance). Finally, it's so much faster.
+
+== The Implementation
+
+=== Cloud-Init
+
+We still need the VM template to clone our new VMs from, but we will only configure cloud-init. Which, looks like the following:
+
+First, we need to tell cloud-init that our link:https://docs.cloud-init.io/en/latest/reference/datasources/vmware.html[datasource] is VMware and we are using Guest OS Customization by adding the following file in `/etc/cloud/cloud.cfg.d`:
+
+.99-vmware-guest-customization.cfg
+[source,yaml]
+----
+datasource:
+  VMware:
+    vmware_cust_file_max_wait: 10
+----
+
+Then, in the `cloud.cfg` file that already exists we want to comment out the default user lines. We will be injecting our own base user in our cloud-init userdata via Terraform.
+
+.cloud.cfg
+[source,yaml]
+----
+#Add the following line:
+disable_vmware_customization: false
+#Comment out the following lines using a # like below:
+#Users:
+#  - default
+  # Default user name + that default users groups (if added/used)
+  #default_user:
+  #  name: ubuntu
+  #  lock_passwd: True
+  #  gecos: Ubuntu
+  #  groups: [adm, audio, cdrom, dialout, dip, floppy, lxd, netdev, plugdev, sudo, video]
+  #  sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+  #  shell: /bin/bash
+----
+
+Now, we run the following commands to make sure the VM is ready for Cloud-Init and we have a clean run on next boot:
+
+[source,bash]
+----
+sudo rm -rf /var/lib/cloud/*
+sudo rm /var/lib/cloud-init/*
+sudo cloud-init clean --machine-id
+----
+
+Once we've made a template from our VM we are ready to move on to Terraform, which will be the tool used to define our VMs and trigger their provisioning in VMware.
+
+=== Terraform
+
+The VMware provider for Terraform is pretty straight forward - link:https://registry.terraform.io/providers/vmware/vsphere/latest/docs[vSphere Provider]. But what I want to touch on is how to go about injecting your cloud-init metadata so that you can set the network config via cloud-init and any other configurations you want to add like users and groups. Below is a `vsphere_virtual_machine` resource with most arguments removed since I just want to highlight the `extra_config` argument. I can pass extra guestinfo properties like metadata, and userdata. I supply the yaml, which is jsonencoded and then base64encoded. The metadata and user data allow me to set the IP configuration, some base packages to be installed and users/groups that I want.
+
+.main.tf
+[source,terraform]
+----
+resource "vsphere_virtual_machine" "vm" {
+
+  extra_config = {
+    "guestinfo.metadata" = base64encode(jsonencode({
+      instance-id    = each.key
+      local-hostname = each.value.hostname
+      network = {
+        version = 2
+        ethernets = {
+          any_ens = {
+            match = {
+              name = "ens*"
+            }
+            addresses = ["${each.value.ip_address}/${var.subnet}"]
+            gateway4  = var.gateway
+            nameservers = {
+              addresses = ["10.1.22.20", "10.1.22.21"]
+              search    = ["domain.com"]
+            }
+          }
+        }
+      }
+      }
+    ))
+    "guestinfo.metadata.encoding" = "base64"
+    "guestinfo.userdata" = base64encode(<<EOF
+        #cloud-config
+        package_update: true
+        package_upgrade: true
+        packages:
+        - firewalld
+        - snmpd
+        groups:
+          - testgroup: [test]
+        users:
+          - name: test
+            gecos: test
+            primary_group: test
+            groups: [sudo, testgroup]
+            lock_passwd: false
+            hashed_passwd: >-
+              <hashed password here>
+            shell: /bin/bash
+        EOF
+    )
+    "guestinfo.userdata.encoding" = "base64"
+  }
+}
+----
+
+You'll also notice that within my guestinfo.metadata I'm passing in variables. These variables are coming from a map of objects, where each object represents a VM configuration:
+
+.variables.tf
+[source,terraform]
+----
+variable "vm_configs" {
+    type = map(object({
+        hostname =  string
+        ip_address = string
+        datastore = string
+        disks = list(object({
+            label = string
+            size = number
+        }))
+        mem = number
+        cpu = number
+    }))
+}
+----
+
+If I want to spin up 3 VMs I simply pass a `vm_configs` map of my VM attributes like the following:
+
+.main.tf
+[source,terraform]
+----
+vm_configs = {
+    "VM1" = {
+      hostname   = "VM1"
+      ip_address = "10.1.122.100"
+      datastore = "dstore-1"
+      disks      = [
+        {
+            label = "disk0"
+            size = 60
+        },
+        {
+            label = "disk1"
+            size = 500
+        }
+      ]
+      mem        = 8192
+      cpu        = 3
+    }
+    "VM2" = {
+      hostname = "VM2"
+      ip_address = "10.1.122.101"
+      datastore = "dstore-1"
+      disks = [
+        {
+            label = "disk0"
+            size = 60
+        },
+        {
+            label = "disk1"
+            size = 500
+        }
+      ]
+      mem = 8192
+      cpu = 3
+    }
+    "VM3" = {
+      hostname = "VM3"
+      ip_address = "10.1.122.102"
+      datastore = "dstore-1"
+      disks = [
+        {
+            label = "disk0"
+            size = 60
+        },
+        {
+            label = "disk1"
+            size = 500
+        }
+      ]
+      mem = 8192
+      cpu = 3
+    }
+}
+----
+
+I also created a terraform module that handles the rest of my VM configuration. This makes my terraform file nice and concise and easy to setup for my team members. Here's an example:
+
+.main.tf
+[source,terraform]
+----
+terraform {
+  required_providers {
+    vsphere = {
+      source  = "vmware/vsphere"
+      version = "2.13.0"
+    }
+  }
+}
+
+provider "vsphere" {
+  # Configuration options
+  user                 = var.vsphere_user
+  password             = var.vsphere_password
+  vsphere_server       = var.vsphere_server
+  allow_unverified_ssl = true
+  api_timeout          = 10
+}
+
+module "linux_vms" {
+    source = "../../../modules/linux_VM"
+
+    vm_folder = "Prod/Logging-Monitoring"
+    resource_pool = "1 - High"
+    network = "10.1.122.x"
+    subnet = "23"
+    gateway = "10.1.122.1"
+    vm_configs = {
+        "VM01" = {
+          hostname   = "VM01"
+          ip_address = "10.1.122.100"
+          datastore = "Datastore-1"
+          disks      = [
+            {
+                label = "disk0"
+                size = 60
+            },
+            {
+                label = "disk1"
+                size = 50
+            }
+          ]
+          mem        = 8192
+          cpu        = 3
+        }
+    }
+}
+----
+
+== Let's wrap it up
+
+Once the VMs are provisioned I then follow up with ansible to finish up configuration. Unlike the configuration bash script I can run our ansible playbooks against all the VMs that were just created at the same time. This saves a lot of time and it ensures that they are all configured the same way.
+
+One thing I've been meaning to look into and test out is triggering ansible playbooks via cloud-init. The way I understand it you would install ansible on the server via cloud-init and then pull down your playbooks from a git repository and run them.

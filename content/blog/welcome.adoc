@@ -1,0 +1,54 @@
+---
+title: "Welcome to My Go-Powered Blog"
+date: 2026-03-07T10:00:00Z
+tags: ["go", "web", "templ", "datastar"]
+excerpt: "An introduction to this new blog built with Go, Templ, and Datastar - a modern hypermedia-driven approach to web development."
+---
+= Welcome to My Go-Powered Blog
+
+Hello and welcome! This is an example blog post demonstrating the power of combining Go, Templ, and Datastar for modern web development.
+
+== Why Go, Templ, and Datastar?
+
+I built this blog using a modern tech stack that prioritizes simplicity and performance:
+
+* *Go* - Fast, reliable backend with excellent concurrency
+* *Templ* - Type-safe HTML templating that compiles to Go code
+* *Datastar* - Hypermedia-driven interactivity without heavy JavaScript frameworks
+* *AsciiDoc* - Rich markup language perfect for technical writing
+
+== Features
+
+This setup provides several key advantages:
+
+. *Server-Side Rendering* - All HTML is rendered on the server
+. *No Build Step* - Unlike React/Vue, there's no complex frontend build process
+. *Type Safety* - Templ templates are checked at compile time
+. *Hot Reload* - Air watches for changes and rebuilds automatically
+. *Simple Deployment* - Just compile to a single binary
+
+== Code Example
+
+Here's a simple Go function:
+
+[source,go]
+----
+package main
+
+import "fmt"
+
+func main() {
+    fmt.Println("Hello from Go!")
+}
+----
+
+== What's Next?
+
+I'm excited to share more content about:
+
+* Go best practices
+* Web development patterns
+* DevOps and infrastructure
+* Building scalable systems
+
+Stay tuned for more posts!

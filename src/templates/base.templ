@@ -1,0 +1,41 @@
+package templates
+
+templ Base(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>{ title }</title>
+			<link rel="stylesheet" href="/static/css/output.css"/>
+			<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"/>
+		</head>
+		<body class="bg-gray-50 min-h-screen flex flex-col">
+			@Nav()
+			<main class="flex-1">
+				{ children... }
+			</main>
+			@Footer()
+			<script type="module" src="/static/js/datastar.js"></script>
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+			<script src="/static/js/terraform.js"></script>
+			<script>
+				// Register Terraform language using the highlightjs-terraform package
+				hljs.registerLanguage('terraform', hljsDefineTerraform);
+				hljs.highlightAll();
+
+				// Add language badges to code block titles
+				document.querySelectorAll('.listingblock').forEach(block => {
+					const title = block.querySelector('.title');
+					const code = block.querySelector('code[data-lang]');
+					if (title && code) {
+						const lang = code.getAttribute('data-lang');
+						title.setAttribute('data-lang', lang);
+					}
+				});
+			</script>
+		</body>
+	</html>
+}

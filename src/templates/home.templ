@@ -1,0 +1,108 @@
+package templates
+
+import "github.com/tedewaard/folio/src/models"
+
+templ HomePage(workProjects []models.Project, sideProjects []models.Project, timeline []models.TimelineItem) {
+	@Base("Trevor Edewaard - Infrastructure Automation Engineer") {
+		<div class="min-h-screen bg-gray-50">
+			<!-- Hero/About Section -->
+			<section id="about" class="flex items-center justify-center bg-white px-4 pt-10 pb-20">
+				<div class="max-w-3xl mx-auto">
+					<div class="flex flex-col items-center mb-8">
+						<img
+							src="/static/images/headshot.jpg"
+							alt="Trevor Edewaard"
+							class="w-32 h-32 rounded-full object-cover object-top mb-6 shadow-lg"
+						/>
+						<h1 class="text-4xl font-mono font-bold text-gray-900 mb-2">
+							Trevor Edewaard
+						</h1>
+						<p class="text-lg text-gray-600 font-mono">
+							Infrastructure Automation Engineer
+						</p>
+					</div>
+
+					<div class="space-y-4 text-gray-700 leading-relaxed">
+						<p>
+							I'm an infrastructure engineer focused on building resilient, automated systems at scale.
+							Currently architecting Kubernetes platforms, implementing GitOps workflows, and automating
+							infrastructure with Terraform and Ansible.
+						</p>
+						<p>
+							My work includes designing on-premises Kubernetes infrastructure that reduced disaster recovery
+							time by over 90%, managing 12,000+ global endpoints, and establishing Infrastructure as Code
+							practices across VM provisioning, network automation, and cloud resources.
+						</p>
+						<p>
+							I've led major migrations—moving 1,000+ endpoints to Microsoft Intune, consolidating 50 cloud
+							apps to Entra SSO, and retiring legacy systems that had been in place for 20 years. I also spoke
+							at Tanium Converge 2023 and build tooling in Rust, Go, and PowerShell to solve real business problems.
+						</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- Work Projects Section -->
+			<section id="work-projects" class="py-20 px-4 bg-gray-50">
+				<div class="max-w-6xl mx-auto">
+					<h2 class="text-4xl font-bold text-gray-900 mb-4 text-center">
+						Work Projects & Accomplishments
+					</h2>
+					<p class="text-gray-600 text-center mb-12">
+						Professional achievements and contributions
+					</p>
+
+					<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+						for _, project := range workProjects {
+							@ProjectCard(project)
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Side Projects Section -->
+			<section id="side-projects" class="py-20 px-4 bg-white">
+				<div class="max-w-6xl mx-auto">
+					<h2 class="text-4xl font-bold text-gray-900 mb-4 text-center">
+						Side Projects
+					</h2>
+					<p class="text-gray-600 text-center mb-12">
+						Personal projects and experiments
+					</p>
+
+					<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+						for _, project := range sideProjects {
+							@ProjectCard(project)
+						}
+					</div>
+				</div>
+			</section>
+
+			<!-- Timeline Section -->
+			<section id="timeline" class="py-20 px-4 bg-gray-50">
+				<div class="max-w-6xl mx-auto mb-12">
+					<h2 class="text-4xl font-bold text-gray-900 mb-4 text-center">
+						My Journey
+					</h2>
+					<p class="text-gray-600 text-center">
+						Career milestones and experiences that shaped my path
+					</p>
+				</div>
+
+				<div class="relative max-w-6xl mx-auto px-4">
+					<!-- Center line -->
+					<div class="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 w-1 bg-gray-300 h-full"></div>
+
+					<!-- Timeline items -->
+					<div class="relative">
+						<div class="h-20"></div>
+						for index, item := range timeline {
+							@TimelineCard(item, index)
+						}
+						<div class="h-20"></div>
+					</div>
+				</div>
+			</section>
+		</div>
+	}
+}

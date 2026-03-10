@@ -1,0 +1,25 @@
+package templates
+
+import "github.com/tedewaard/folio/src/models"
+
+templ BlogCard(post models.BlogPost) {
+	<article class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow">
+		<h2 class="text-2xl font-bold mb-2">
+			<a href={ templ.SafeURL("/blog/" + post.Slug) } class="text-gray-900 hover:text-gray-600 transition">
+				{ post.Metadata.Title }
+			</a>
+		</h2>
+		<div class="flex gap-4 mb-3 text-sm text-gray-500">
+			<time datetime={ post.Metadata.Date.Format("2006-01-02") }>
+				{ post.Metadata.Date.Format("January 2, 2006") }
+			</time>
+			<span>{ post.Metadata.ReadingTime }</span>
+		</div>
+		<p class="text-gray-600 mb-4">{ post.Metadata.Excerpt }</p>
+		<div class="flex flex-wrap gap-2">
+			for _, tag := range post.Metadata.Tags {
+				<span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">{ tag }</span>
+			}
+		</div>
+	</article>
+}

@@ -1,0 +1,17 @@
+package templates
+
+import "time"
+
+templ Footer() {
+	<footer class="bg-white shadow-sm mt-16 py-8 text-center">
+		<div class="flex justify-center gap-6 mb-4">
+			<a href="https://www.linkedin.com/in/trevor-edewaard-b21923a4/" class="text-gray-600 hover:text-blue-600 transition">
+				LinkedIn
+			</a>
+			<a href="https://github.com/tedewaard" class="text-gray-600 hover:text-gray-900 transition">
+				GitHub
+			</a>
+		</div>
+		<p class="text-gray-500 text-sm">&copy; { time.Now().Format("2006") } Trevor Edewaard</p>
+	</footer>
+}

@@ -1,0 +1,86 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/tedewaard/folio/src/models"
+)
+
+// TimelineCard renders an interactive timeline card with expand/collapse
+templ TimelineCard(item models.TimelineItem, index int) {
+	if item.Position == "left" {
+		<div class="mb-8 flex justify-center md:justify-start relative">
+			<!-- Left-aligned card -->
+			<div class="w-full md:w-5/12 md:pr-8" data-signals={ fmt.Sprintf("{expanded_%d: false}", index) }>
+				<div
+					class="bg-white p-6 rounded-lg shadow-xl hover:shadow-2xl transition-shadow cursor-pointer"
+					data-on:click={ fmt.Sprintf("$expanded_%d = !$expanded_%d", index, index) }
+				>
+					<div class="flex items-center justify-between mb-2">
+						<h3 class="text-xl font-bold text-gray-900">{ item.Title }</h3>
+						<span class="text-gray-500" data-text={ fmt.Sprintf("$expanded_%d ? '▲' : '▼'", index) }></span>
+					</div>
+					<p class="text-sm text-gray-500 mb-3">{ item.Date }</p>
+
+					<!-- Expandable description -->
+					<div data-show={ fmt.Sprintf("$expanded_%d", index) }>
+						<p class="text-gray-700 leading-relaxed pt-2">{ item.Description }</p>
+					</div>
+
+					<!-- Expand indicator -->
+					<div data-show={ fmt.Sprintf("!$expanded_%d", index) } class="text-sm text-gray-500 mt-2">
+						Click to read more
+					</div>
+				</div>
+			</div>
+
+			<!-- Spacer for center line on desktop -->
+			<div class="hidden md:block md:w-2/12"></div>
+
+			<!-- Empty right side -->
+			<div class="hidden md:block md:w-5/12"></div>
+
+			<!-- Timeline bubble -->
+			<div class="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 mt-6">
+				<div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+			</div>
+		</div>
+	} else {
+		<div class="mb-8 flex justify-center md:justify-end relative">
+			<!-- Right-aligned card -->
+			<!-- Empty left side on desktop -->
+			<div class="hidden md:block md:w-5/12"></div>
+
+			<!-- Spacer for center line on desktop -->
+			<div class="hidden md:block md:w-2/12"></div>
+
+			<!-- Right-aligned card content -->
+			<div class="w-full md:w-5/12 md:pl-8" data-signals={ fmt.Sprintf("{expanded_%d: false}", index) }>
+				<div
+					class="bg-white p-6 rounded-lg shadow-xl hover:shadow-2xl transition-shadow cursor-pointer"
+					data-on:click={ fmt.Sprintf("$expanded_%d = !$expanded_%d", index, index) }
+				>
+					<div class="flex items-center justify-between mb-2">
+						<h3 class="text-xl font-bold text-gray-900">{ item.Title }</h3>
+						<span class="text-gray-500" data-text={ fmt.Sprintf("$expanded_%d ? '▲' : '▼'", index) }></span>
+					</div>
+					<p class="text-sm text-gray-500 mb-3">{ item.Date }</p>
+
+					<!-- Expandable description -->
+					<div data-show={ fmt.Sprintf("$expanded_%d", index) }>
+						<p class="text-gray-700 leading-relaxed pt-2">{ item.Description }</p>
+					</div>
+
+					<!-- Expand indicator -->
+					<div data-show={ fmt.Sprintf("!$expanded_%d", index) } class="text-sm text-gray-500 mt-2">
+						Click to read more
+					</div>
+				</div>
+			</div>
+
+			<!-- Timeline bubble -->
+			<div class="absolute left-4 md:left-1/2 transform md:-translate-x-1/2 mt-6">
+				<div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+			</div>
+		</div>
+	}
+}
