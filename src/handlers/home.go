@@ -31,7 +31,7 @@ func HandleHome(w http.ResponseWriter, r *http.Request) {
 		},
 		{
 			Title:       "VM and Endpoint Life Cycle Management",
-			Description: "Managed comprehensive lifecycle operations for VM infrastructure and 1,000+ workstations, including vulnerability remediation and third-party application management, which removed thousands of known exploitable vulnerabilities from the environment.",
+			Description: "Managed comprehensive lifecycle operations for VM infrastructure and 12,000+ workstations, including vulnerability remediation and third-party application management, which removed thousands of known exploitable vulnerabilities from the environment.",
 			Technologies: []models.Technology{
 				{Name: "Datto", Color: "indigo"},
 				{Name: "VMware", Color: "red"},

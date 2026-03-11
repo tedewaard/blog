@@ -43,7 +43,7 @@ func BlogList(posts []models.BlogPost) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8\"><h1 class=\"text-4xl font-bold text-gray-900 mb-8\">Blog</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8\"><h1 class=\"text-4xl font-bold text-gray-900 mb-8\">Thoughts on Infrastructure, DevOps, and Automation</h1>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
