@@ -1,0 +1,45 @@
+---
+title: "Refreshing Kubernetes Infrastructure - Retrospective"
+date: 2026-03-11T00:00:00Z
+tags: ["kubernetes", "rke2", "rancher", "ubuntu", "esxi"]
+excerpt: "Reflective thoughts after refreshing 5 year old outdated Kubernetes infrastructure."
+---
+= Kubernetes Refresh
+This is a reflection on refreshing 5 year old outdated kubernetes infrastructure 
+in a production environment.  
+
+== Background
+To start, I think it's important to understand that I hadn't touched Kubernetes 
+before taking on this project, but I'm of the opinion that the best way to learn 
+is to just do. And I've really been wanting to learn K8s. Plus, I have a pretty 
+good track record of successfully tackling projects that others don't want to 
+touch (for better or worse), and this project was a doozy. 
+
+Also, most companies have some form of technical debt and a lot of times it comes from
+members in IT wanting to implement the latest interesting technology. I'm not hating
+on this and I'm very guilty of pushing for new tech as well. In fact, I think the 
+ability to do this kind of thing is a huge motivator for IT professionals. But, it
+can and does lead to untouched, outdated, complex systems setup by someone that 
+has used their experience to move on in their career. Our K8s environment was no
+exception. 
+
+The last thing I'll mention so you have a bit more context is that K8s was setup and managed
+by our Dev team, which then formed into a DevOps team. I'm on the Infrastructure team, and
+our responsiblity included the underlying infrastructure like compute, storage, and networking.
+We made sure the Devs had VMs and helped with any networking requirements. We also made
+sure backups took place at the VM level. Otherwise, the DevOps team handled everything else. 
+
+=== Old K8s Environment
+Half way through 2025 we were running two RKE Kubernetes clusters (UAT & Prod) with a Kubernetes
+version of 1.19. Yes, that was released in 2021 and they hadn't been updated since. 
+That meant docker as the CRI instead of containerd and a whole load of vulnerabilities. Which, can
+be added to the other mountain of vulnerabilities provided by the underlying OS - Ubuntu 18.04
+VMs that weren't ever patched (18.04 went EOL in May of 2023). 
+
+Other components in our cluster included:
+  * Calico for the CNI
+  * MetalLB for a load balancer
+  * Keepalived for the Kube API Server VIP
+  * Cert-Manager for SSL termination via Lets Encrypt
+
+
