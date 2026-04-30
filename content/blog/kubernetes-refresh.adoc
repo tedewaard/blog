@@ -1,12 +1,11 @@
 ---
 title: "Refreshing Kubernetes Infrastructure - Retrospective"
-date: 2026-03-11T00:00:00Z
+date: 2026-04-11T00:00:00Z
 tags: ["kubernetes", "rke2", "rancher", "ubuntu", "esxi"]
-excerpt: "Reflective thoughts after refreshing 5 year old outdated Kubernetes infrastructure."
+excerpt: "Reflection after refreshing 5 year old outdated Kubernetes infrastructure."
 ---
-= Kubernetes Refresh
 This is a reflection on refreshing 5 year old outdated kubernetes infrastructure 
-in a production environment.  
+in a production environment.
 
 == Background
 To start, I think it's important to understand that I hadn't touched Kubernetes 
@@ -20,8 +19,8 @@ members in IT wanting to implement the latest interesting technology. I'm not ha
 on this and I'm very guilty of pushing for new tech as well. In fact, I think the 
 ability to do this kind of thing is a huge motivator for IT professionals. But, it
 can and does lead to untouched, outdated, complex systems setup by someone that 
-has used their experience to move on in their career. Our K8s environment was no
-exception. 
+has used their experience to move on in their career. Our K8s environment had a 
+touch of this as well.
 
 The last thing I'll mention so you have a bit more context is that K8s was setup and managed
 by our Dev team, which then formed into a DevOps team. I'm on the Infrastructure team, and
@@ -29,17 +28,60 @@ our responsiblity included the underlying infrastructure like compute, storage, 
 We made sure the Devs had VMs and helped with any networking requirements. We also made
 sure backups took place at the VM level. Otherwise, the DevOps team handled everything else. 
 
-=== Old K8s Environment
-Half way through 2025 we were running two RKE Kubernetes clusters (UAT & Prod) with a Kubernetes
+== Old K8s Environment
+Half way through 2025 we were running three RKE Kubernetes clusters (UAT, Prod & GitLab) with a Kubernetes
 version of 1.19. Yes, that was released in 2021 and they hadn't been updated since. 
 That meant docker as the CRI instead of containerd and a whole load of vulnerabilities. Which, can
-be added to the other mountain of vulnerabilities provided by the underlying OS - Ubuntu 18.04
+be added to the other mountain of vulnerabilities at the OS level - Ubuntu 18.04
 VMs that weren't ever patched (18.04 went EOL in May of 2023). 
 
 Other components in our cluster included:
-  * Calico for the CNI
-  * MetalLB for a load balancer
   * Keepalived for the Kube API Server VIP
+  * HAProxy
+  * KubeProxy
+  * MetalLB for a load balancer
+  * Calico for the CNI
   * Cert-Manager for SSL termination via Lets Encrypt
+
+Oh, I should mention that backups were non existent. I mean, the VMs were backed up but etcd wasn't,
+and having daily VM backups of Kubernetes nodes really isn't helpful. Cluster configuration and 
+app deployments via Helm all lived in on-prem GitLab (hosted in a cluster). We 
+didn't have a quick way of spinning up a new cluster, and if we did, we would need 
+to run the CI jobs for over 200 services in order to deploy them. Basically, we 
+didn't touch the clusters and prayed they didn't break.
+
+
+== The Refresh
+I, along with the DevOps team, had one theme when planning out the new architecture and it 
+was keep it simple and boring. We even named the project group chat "Land of the boring". If we wanted to avoid what happened with the last clusters then we needed to reduce complexity. This meant automated cluster creation, K8s backups, simpler network with fewer components and taking advantage of tooling we already had and the experts of that tooling.
+
+So what did this look like?
+
+=== Kubernetes Distribution
+We decided to stick with Rancher RKE2 for the Kubernetes distribution. Rancher's website lists RKE2 as their "enterprise-ready next-generation Kubernetes distribution" which "focuses on security and compliance within the U.S. Federal Government sector." Honestly, we were familiar with RKE and liked Rancher as our controller so it just made sense to stick with RKE2 and get the included security defaults.
+
+=== Networking
+Networking is were we made the biggest changes. We decided to utilize our F5 load balancers as much as possible, so that combined with choosing Cilium as our CNI meant we could drop the following components:
+
+  * Keepalived
+  * HAProxy
+  * KubeProxy
+  * MetalLB
+  * Calico
+  * Cert-Manager
+
+The F5 handled the VIP for our control planes and workers. It also handled load balancing and terminating SSL. Cilium replaced KubeProxy and gave us better performance with eBPF and great visibility via Hubble. Plus, the infrastructure team knows the F5 well and we can easily support everything the devs needed.
+
+[NOTE]
+====
+Hubble proved its worth right away by allowing us to quickly troubleshoot some networking issues around database connections.
+====
+
+
+=== Disaster Recovery
+DR for our new clusters really consisted of two things:
+
+1. Infrastructure as Code
+2. Velero
 
 

@@ -4,8 +4,6 @@ date: 2026-01-27T00:00:00Z
 tags: ["vmware", "cloud-init", "terraform", "iaac", "esxi"]
 excerpt: "Automating VM provisioning on VMware ESXi using Terraform and Cloud-Init to save time, ensure consistency, and add the benefits of version control."
 ---
-= VMware, Cloud-Init & Terraform
-
 Most of my career has been spent at a company that hosts their infrastructure on prem. Like most companies, that means VMware ESXi for our hypervisor. I've always been interested in automation and really wanted a reason to use Terraform, despite not being a cloud shop. So, I set out to automate our VM provisioning in order to save time, make the process consistent and reliable, and add the benefits of version control.
 
 == The Old Process
