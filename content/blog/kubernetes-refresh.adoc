@@ -55,7 +55,7 @@ didn't touch the clusters and prayed they didn't break.
 I, along with the DevOps team, had one theme when planning out the new architecture and it 
 was keep it simple and boring. We even named the project group chat "Land of the boring". If we wanted to avoid what happened with the last clusters then we needed to reduce complexity. This meant automated cluster creation, K8s backups, simpler network with fewer components and taking advantage of tooling we already had and the experts of that tooling.
 
-So what did this look like?
+So, what did this look like?
 
 === Kubernetes Distribution
 We decided to stick with Rancher RKE2 for the Kubernetes distribution. Rancher's website lists RKE2 as their "enterprise-ready next-generation Kubernetes distribution" which "focuses on security and compliance within the U.S. Federal Government sector." Honestly, we were familiar with RKE and liked Rancher as our controller so it just made sense to stick with RKE2 and get the included security defaults.

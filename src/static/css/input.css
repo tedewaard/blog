@@ -39,8 +39,23 @@
 }
 
 .prose li {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+  line-height: 1.5;
+}
+
+.prose li p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.prose-lg li {
+  line-height: 1.5;
+}
+
+.prose-lg li p {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .prose ol {
